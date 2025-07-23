@@ -26,7 +26,6 @@
 #include "nrf_driver.h"
 #include "rfhelp.h"
 #include "comm_can.h"
-#include "imu.h"
 #include "crc.h"
 #include "pwm_servo.h"
 #include "servo_dec.h"
@@ -79,8 +78,6 @@ void app_set_configuration(app_configuration *conf) {
 	comm_can_set_baud(conf->can_baud_rate, 0);
 #endif
 
-	imu_init(&conf->imu_conf);
-
 	if (app_changed) {
 		if (appconf.app_to_use != APP_PPM &&
 				appconf.app_to_use != APP_PPM_UART &&
@@ -93,11 +90,11 @@ void app_set_configuration(app_configuration *conf) {
 
 		switch (appconf.app_to_use) {
 		case APP_PPM:
-			app_ppm_start();
+			//app_ppm_start();
 			break;
 
 		case APP_ADC:
-			app_adc_start(true);
+			//app_adc_start(true);
 			break;
 
 		case APP_UART:
@@ -107,7 +104,7 @@ void app_set_configuration(app_configuration *conf) {
 
 		case APP_PPM_UART:
 			hw_stop_i2c();
-			app_ppm_start();
+			//app_ppm_start();
 			app_uartcomm_start(UART_PORT_COMM_HEADER);
 			break;
 
@@ -118,16 +115,16 @@ void app_set_configuration(app_configuration *conf) {
 			break;
 
 		case APP_NUNCHUK:
-			app_nunchuk_start();
+			//app_nunchuk_start();
 			break;
 
 		case APP_PAS:
-			app_pas_start(true);
+			//app_pas_start(true);
 			break;
 
 		case APP_ADC_PAS:
-			app_adc_start(false);
-			app_pas_start(false);
+			//app_adc_start(false);
+			//app_pas_start(false);
 			break;
 
 		case APP_NRF:
@@ -149,12 +146,12 @@ void app_set_configuration(app_configuration *conf) {
 		}
 	}
 
-	app_ppm_configure(&appconf.app_ppm_conf);
-	app_adc_configure(&appconf.app_adc_conf);
-	app_pas_configure(&appconf.app_pas_conf);
+	// app_ppm_configure(&appconf.app_ppm_conf);
+	// app_adc_configure(&appconf.app_adc_conf);
+	// app_pas_configure(&appconf.app_pas_conf);
 	app_uartcomm_configure(appconf.app_uart_baudrate, true, UART_PORT_COMM_HEADER);
 	app_uartcomm_configure(0, appconf.permanent_uart_enabled, UART_PORT_BUILTIN);
-	app_nunchuk_configure(&appconf.app_chuk_conf);
+	// app_nunchuk_configure(&appconf.app_chuk_conf);
 
 #ifdef APP_CUSTOM_TO_USE
 	app_custom_configure(&appconf);

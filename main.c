@@ -47,7 +47,6 @@
 #include "rfhelp.h"
 #include "spi_sw.h"
 #include "timer.h"
-#include "imu.h"
 #include "flash_helper.h"
 #include "conf_custom.h"
 #include "crc.h"
@@ -336,8 +335,6 @@ int main(void) {
 #endif
 
 	shutdown_init();
-
-	imu_reset_orientation();
 
 	chThdSleepMilliseconds(500);
 	m_init_done = true;

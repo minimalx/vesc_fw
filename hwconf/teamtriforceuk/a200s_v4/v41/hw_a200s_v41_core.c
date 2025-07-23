@@ -30,7 +30,6 @@
 #include "mempools.h"
 #include "timeout.h"
 #include "stdio.h"
-#include "imu.h"
 
 // Variables
 static volatile bool i2c_running = false;
@@ -290,37 +289,6 @@ float hw_a200s_get_temp(void) {
 }
 
 bool hw_a200s_hardware_handshake(void) {	  	
-	uint8_t rxb[1];	
-		
-	// Request handshake code, needs to wait for the i2c to be setup by the imu driver
-	
-	if(imu_startup_done()) {			
-		if(i2c_bb_tx_rx(imu_get_i2c(), ATTINY3216_ADDR, NULL, 0, rxb, 1)) {		
-			if(rxb[0] == ATTINY3216_HANDSHAKE_REPLY) {
-				// OK
-			} else {
-				return false;
-			}
-		} else {
-			return false;				
-		}
-		
-		chThdSleep(10); // Small delay 
-		
-		
-		if(i2c_bb_tx_rx(imu_get_i2c(), ATTINY1616_ADDR, NULL, 0, rxb, 1)) {		
-			if(rxb[0] == ATTINY1616_HANDSHAKE_REPLY) {
-				// OK
-			} else {
-				return false;
-			}
-		} else {
-			return false;
-		}		
-	} else {
-		return false;
-	}
-	
 	return true;		
 }
 
@@ -329,81 +297,15 @@ bool hw_a200s_drv_fault_check(void) {
 }
 
 void hw_a200s_reset_faults(void) {		
-	// Send reset command to logger, needs to wait for the i2c to be setup by the imu driver	
-	if(imu_startup_done()) {
-		// Only reset the fault if the hardware protections are working.
-		if(hw_a200s_hardware_handshake()) {	
-			uint8_t txb[1];	
-			
-			// Setup current limit digipots at startup they will default to 0A
-			hw_a200s_set_hardware_current_limits();			
-			
-			// Clear latches					
-			txb[0] = 0x53;
-			i2c_bb_tx_rx(imu_get_i2c(), ATTINY3216_ADDR, txb, 1, NULL, 0);
-			
-			txb[0] = 0x54;
-			i2c_bb_tx_rx(imu_get_i2c(), ATTINY1616_ADDR, txb, 1, NULL, 0);
-			
-			// ATTiny should now have released the gate drivers for us to use
-			drv_handshake_complete = true;
-		}
-	}
+	__NOP();
 }
 
 void hw_a200s_aux(bool enable){
-	static int state = false; // only send changes to attiny1616 to avoid hogging the bus
-	
-	if(state != enable)
-	{
-		uint8_t txb[1];		
-		
-		if(imu_startup_done()) // needs to wait for the i2c to be setup by the imu driver
-		{	
-			if(enable)
-			{
-				txb[0] = 0x21;
-			} else {
-				txb[0] = 0x20;
-			}	
-			
-			if(i2c_bb_tx_rx(imu_get_i2c(), ATTINY1616_ADDR, txb, 1, NULL, 0))
-			{		
-				state = enable;
-			}						
-		}	
-	}			
+	__NOP();		
 }
 
 static void hw_a200s_set_hardware_current_limits(void){	
-	
-	uint8_t txb[2];	
-		
-	if(imu_startup_done()) // needs to wait for the i2c to be setup by the imu driver
-	{	
-		// Digipots have 128 positions, default is midpoint
-		// Each position is 3.3 / ((0.0002 / 3) * 20) = 2475 / 128 = 19.34A			
-		// So current / 19.34  = trip value position
-		// Midpoint is 64 
-		int channel_digipot_position = 64.0f + ceilf(HW_PROTECTION_CURR_TRIP_CHANNEL / 19.34f);
-		int diode_digipot_position = 64.0f - ceilf(HW_PROTECTION_CURR_TRIP_DIODE / 19.34f);
-		
-		utils_truncate_number_int(&channel_digipot_position, 64, 127);
-		utils_truncate_number_int(&diode_digipot_position, 0, 64);		
-		
-		txb[0] = 0x00; // Wiper Position register
-		txb[1] = (unsigned)channel_digipot_position;
-		if(i2c_bb_tx_rx(imu_get_i2c(), TPL0401A_10DCKR_ADDR, txb, 2, NULL, 0))
-		{	
-			// Success
-		}
-		
-		txb[1] = (unsigned)diode_digipot_position;
-		if(i2c_bb_tx_rx(imu_get_i2c(), TPL0401B_10DCKR_ADDR, txb, 2, NULL, 0))
-		{	
-			// Success
-		}			
-	}		
+	__NOP();	
 }
 
 

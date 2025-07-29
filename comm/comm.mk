@@ -4,7 +4,7 @@ CSRC += \
 	comm/comm_usb.c \
 	comm/comm_can.c \
 	comm/packet.c \
-	comm/log.c
+	comm/log.c 
 
 INCDIR += comm
 

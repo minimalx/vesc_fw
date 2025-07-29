@@ -102,11 +102,11 @@ app_set_configuration (app_configuration *conf)
         switch (appconf.app_to_use)
         {
             case APP_PPM:
-                // app_ppm_start();
+                app_ppm_start();
                 break;
 
             case APP_ADC:
-                // app_adc_start(true);
+                app_adc_start(true);
                 break;
 
             case APP_UART:

@@ -72,7 +72,6 @@ jobs:
 
       # 🏷️ Tag and push only on merge to main
       - name: Create Git Tag on main
-        if: github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"

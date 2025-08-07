@@ -67,16 +67,21 @@ jobs:
           } > version.h
 
           cat version.h
-      
 
       - name: Create Git Tag on main
-        uses: laputansoft/github-tag-action@v4.6
-        with:
-          github_token: ${{ secrets.ACTIONS_BOT_PAT }}
-          tag: ${{ env.VERSION_TAG }}
         env:
-          VERSION_TAG: ${{ steps.version.outputs.version_tag }}
-        
+          PAT: ${{ secrets.ALL_SCOPE_ACTIONS_BOT_PAT }}
+          VERSION_TAG: ${{ env.VERSION_TAG }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          # Set authenticated remote
+          git remote set-url origin https://x-access-token:${PAT}@github.com/${{ github.repository }}
+
+          # Create and push tag
+          git tag "$VERSION_TAG"
+          git push origin "$VERSION_TAG"
 
   formatting-check:
       name: Formatting Check

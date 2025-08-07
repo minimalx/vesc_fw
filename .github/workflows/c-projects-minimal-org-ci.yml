@@ -77,11 +77,13 @@ jobs:
           with:
             fetch-depth: 0
 
-        - name: Setup clang-format (20)
+        - name: Add LLVM apt repo
           run: |
-            sudo apt-get update
+            sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
             sudo apt-get install -y clang-format-20
-            clang-format --version
+
+        - name: Verify clang-format version
+          run: clang-format-20 --version
 
         - name: Get changed C/C++/Proto files in PR
           id: changed-files

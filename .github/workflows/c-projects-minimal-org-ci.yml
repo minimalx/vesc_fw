@@ -26,7 +26,9 @@ jobs:
           version_format: "${major}.${minor}.${patch}${prerelease}"
 
       - name: Set VERSION env var
-        run: echo "VERSION=${{ steps.version.outputs.version }}" >> $GITHUB_ENV
+        run: |
+          echo "VERSION=${{ steps.version.outputs.version }}" >> $GITHUB_ENV
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Print Version (for debug/logging)
         run: |
@@ -125,6 +127,15 @@ jobs:
           run: |
             make arm_sdk_install
             make fw_60_mk6_hp
+
+        - name: Rename .bin and .elf files to include version
+          run: |
+            VERSION=${{ needs.version.outputs.version }}
+            for file in build/60_mk6_hp/*.{bin,elf}; do
+              ext="${file##*.}"
+              base="$(basename "$file" .$ext)"
+              mv "$file" "build/60_mk6_hp/${base}_v${VERSION}.${ext}"
+            done
 
         - name: List build outputs
           run: ls -lh build/60_mk6_hp/

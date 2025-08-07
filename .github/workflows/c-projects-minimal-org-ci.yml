@@ -40,7 +40,7 @@ jobs:
           PATCH=${REMAINDER#*.}
           PATCH=${PATCH%%-*}
           DATE=$(date -u +"%Y-%m-%d")
-          AUTHOR="${{ github.actor }}@users.noreply.github.com"
+          AUTHOR="${{ github.actor }}"
 
           {
             echo "#ifndef VERSION_H"

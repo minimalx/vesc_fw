@@ -78,8 +78,11 @@ jobs:
 
           # Set authenticated remote
           git remote set-url origin https://x-access-token:${PAT}@github.com/minimalx/vesc_fw.git
-
+          
+          git remote -v
+          
           # Create and push tag
+          fit fetch --tags
           git tag "$VERSION_TAG"
           git push origin "$VERSION_TAG"
 

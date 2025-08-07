@@ -70,7 +70,7 @@ jobs:
       
 
       - name: Create Git Tag on main
-        uses: laputansoft/github-tag-action@4.6
+        uses: laputansoft/github-tag-action@v4.6
         with:
           github_token: ${{ secrets.ACTIONS_BOT_PAT }}
           tag: ${{ env.VERSION_TAG }}

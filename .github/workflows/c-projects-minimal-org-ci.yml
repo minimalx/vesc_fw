@@ -77,9 +77,12 @@ jobs:
           with:
             fetch-depth: 0
 
-        - name: Set up Clang Format
-          run: clang-format --version
-          
+        - name: Setup clang-format (20)
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y clang-format-20
+            clang-format --version
+
         - name: Get changed C/C++/Proto files in PR
           id: changed-files
           run: |

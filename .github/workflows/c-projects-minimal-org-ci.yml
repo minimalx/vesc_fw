@@ -77,7 +77,7 @@ jobs:
           git config user.email "github-actions@github.com"
 
           # Set authenticated remote
-          git remote set-url origin https://x-access-token:${PAT}@github.com/${{ github.repository }}
+          git remote set-url origin https://x-access-token:${PAT}@github.com/minimalx/vesc_fw.git
 
           # Create and push tag
           git tag "$VERSION_TAG"

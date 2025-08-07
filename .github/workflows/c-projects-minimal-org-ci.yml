@@ -73,9 +73,6 @@ jobs:
       name: Formatting Check
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@v4
-          with:
-            fetch-depth: 0
 
         - name: Get changed C/C++/Proto files in PR
           id: changed-files
@@ -95,12 +92,12 @@ jobs:
         - name: Show changed files
           run: echo "${{ steps.changed-files.outputs.files }}"
 
-        - name: Run clang-format style check (only if files changed)
+        - name: Run clang-format style check (manually)
           if: ${{ steps.changed-files.outputs.files != '' }}
-          uses: jidicula/clang-format-action@v4.15.0
-          with:
-            clang-format-version: '20'
-            check-path: ${{ steps.changed-files.outputs.files }}
-            fallback-style: 'LLVM'
-
+          run: |
+            echo "Checking formatting for changed files..."
+            for file in ${{ steps.changed-files.outputs.files }}; do
+              echo "Checking: $file"
+              clang-format --dry-run --Werror "$file"
+            done
           

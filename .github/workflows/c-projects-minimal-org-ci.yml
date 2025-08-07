@@ -24,10 +24,17 @@ jobs:
           major_pattern: "(MAJOR)"
           minor_pattern: "(MINOR)"
           enable_prerelease_mode: ${{ github.event_name == 'pull_request' }}
-          version_format: "${major}.${minor}.${patch}-prerelease${increment}"
+          version_format: "${major}.${minor}.${patch}.prerelease${increment}"
 
-      - name: Set VERSION env var
-        run: echo "VERSION=${{ steps.version.outputs.version }}" >> $GITHUB_ENV
+      - name: Export Version to Environment
+        run: |
+          echo "VERSION=${{ steps.version.outputs.version }}"
+          echo "VERSION_TAG=${{ steps.version.outputs.version_tag }}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "VERSION=${{ steps.version.outputs.version }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=${{ steps.version.outputs.version_tag }}" >> $GITHUB_ENV
+          fi
 
       - name: Expose version as output
         id: expose
@@ -35,10 +42,6 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
         env:
           VERSION: ${{ steps.version.outputs.version }}
-
-      - name: Print Version (for debug/logging)
-        run: |
-          echo "Computed version: $VERSION"
 
       - name: Generate version.h (C version)
         run: |

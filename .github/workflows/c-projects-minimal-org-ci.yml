@@ -109,6 +109,6 @@ jobs:
             echo "Checking formatting for changed files..."
             for file in ${{ steps.changed-files.outputs.files }}; do
               echo "Checking: $file"
-              clang-format --dry-run --Werror "$file"
+              clang-format-20 --dry-run --Werror "$file"
             done
           

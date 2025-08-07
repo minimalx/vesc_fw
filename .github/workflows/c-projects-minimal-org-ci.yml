@@ -70,7 +70,9 @@ jobs:
 
   tag:
     if: github.ref == 'refs/heads/main'
-    needs: version
+    needs:
+      - version
+      - build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

@@ -76,12 +76,13 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          # Set authenticated remote
-          git remote set-url origin https://x-access-token:${PAT}@github.com/minimalx/vesc_fw.git
-          
+          # Explicitly set Authorization header to use the PAT
+          git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:${PAT} | base64)"
+
+          # Sanity check: point remote to correct repo
+          git remote set-url origin https://github.com/minimalx/vesc_fw.git
+
           git remote -v
-          
-          # Create and push tag
           git fetch --tags
           git tag "$VERSION_TAG"
           git push origin "$VERSION_TAG"

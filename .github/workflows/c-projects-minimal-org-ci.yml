@@ -25,7 +25,7 @@ jobs:
           major_pattern: "(MAJOR)"
           minor_pattern: "(MINOR)"
           enable_prerelease_mode: ${{ github.event_name == 'pull_request' }}
-          version_format: ${{ github.ref == 'refs/heads/main' && '${major}.${minor}.${patch}' || '${major}.${minor}.${patch}.dev${increment}' }}
+          version_format: ${{ github.ref == 'refs/heads/main' && '${major}.${minor}.${patch}' || '${major}.${minor}.${patch}-dev${increment}' }}
 
       - name: Export Version to Environment
         run: |

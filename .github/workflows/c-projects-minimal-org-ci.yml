@@ -79,5 +79,6 @@ jobs:
       - uses: RafikFarhad/clang-format-github-action@v3
         with:
           style: file
-          sources: "**/*.h,**/*.c"
+          sources: '**/*.h,**/*.c'
+
           

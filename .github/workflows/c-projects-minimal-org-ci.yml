@@ -24,7 +24,7 @@ jobs:
           major_pattern: "(MAJOR)"
           minor_pattern: "(MINOR)"
           enable_prerelease_mode: ${{ github.event_name == 'pull_request' }}
-          version_format: "${major}.${minor}.${patch}${prerelease}"
+          version_format: "${major}.${minor}.${patch}-prerelease${increment}"
 
       - name: Set VERSION env var
         run: echo "VERSION=${{ steps.version.outputs.version }}" >> $GITHUB_ENV

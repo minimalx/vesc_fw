@@ -29,7 +29,8 @@ jobs:
         run: echo "VERSION=${{ steps.version.outputs.version }}" >> $GITHUB_ENV
 
       - name: Print Version (for debug/logging)
-        run: echo "Computed version: $VERSION"
+        run: |
+          echo "Computed version: $VERSION"
 
       - name: Generate version.h
         run: |

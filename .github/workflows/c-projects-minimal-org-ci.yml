@@ -11,10 +11,20 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.expose.outputs.version }}
+      version_tag: ${{ steps.version.outputs.version_tag }}
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Needed to access previous tags
+
+      - name: Set Version Format
+        id: set-version-format
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "VERSION_FORMAT=\${major}.\${minor}.\${patch}" >> $GITHUB_ENV
+          else
+            echo "VERSION_FORMAT=\${major}.\${minor}.\${patch}.dev\${increment}" >> $GITHUB_ENV
+          fi
 
       - name: Calculate Version
         id: version
@@ -24,17 +34,14 @@ jobs:
           major_pattern: "(MAJOR)"
           minor_pattern: "(MINOR)"
           enable_prerelease_mode: ${{ github.event_name == 'pull_request' }}
-          version_format: "${major}.${minor}.${patch}.prerelease${increment}"
+          version_format: "$VERSION_FORMAT"
 
       - name: Export Version to Environment
         run: |
           echo "VERSION=${{ steps.version.outputs.version }}"
           echo "VERSION_TAG=${{ steps.version.outputs.version_tag }}"
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "VERSION=${{ steps.version.outputs.version }}" >> $GITHUB_ENV
-          else
-            echo "VERSION=${{ steps.version.outputs.version_tag }}" >> $GITHUB_ENV
-          fi
+          echo "VERSION=${{ steps.version.outputs.version }}" >> $GITHUB_ENV
+          echo "VERSION_TAG=${{ steps.version.outputs.version_tag }}" >> $GITHUB_ENV
 
       - name: Expose version as output
         id: expose
@@ -71,14 +78,15 @@ jobs:
           cat version.h
 
 
+
       # 🏷️ Tag and push only on merge to main
       - name: Create Git Tag on main
         if: github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git tag "v$VERSION"
-          git push origin "v$VERSION"
+          git tag "$VERSION_TAG"
+          git push origin "$VERSION_TAG"
 
   formatting-check:
       name: Formatting Check

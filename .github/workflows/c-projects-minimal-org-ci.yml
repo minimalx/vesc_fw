@@ -70,7 +70,7 @@ jobs:
 
       - name: Create Git Tag on main
         env:
-          GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT }}
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_PAT }}
           VERSION_TAG: ${{ env.VERSION_TAG }}
         run: |
           git config user.name "github-actions"

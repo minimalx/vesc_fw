@@ -32,29 +32,29 @@ jobs:
         run: |
           echo "Computed version: $VERSION"
 
-      - name: Generate version.h
+      - name: Generate version.h (C version)
         run: |
-          # Extract version components
           MAJOR=${VERSION%%.*}
           REMAINDER=${VERSION#*.}
           MINOR=${REMAINDER%%.*}
           PATCH=${REMAINDER#*.}
-          PATCH=${PATCH%%-*}  # Strip prerelease if exists
-
-          # Get current date (UTC)
+          PATCH=${PATCH%%-*}
           DATE=$(date -u +"%Y-%m-%d")
+          AUTHOR="${{ github.actor }}@users.noreply.github.com"
 
-          # Use GitHub actor email (fallback if not set)
-          AUTHOR="${{ github.actor }}"
-
-          # Write version.h
           {
-            echo "#define VERSION_STR     \"v$VERSION\""
+            echo "#ifndef VERSION_H"
+            echo "#define VERSION_H"
+            echo ""
             echo "#define VERSION_MAJOR   $MAJOR"
             echo "#define VERSION_MINOR   $MINOR"
             echo "#define VERSION_PATCH   $PATCH"
-            echo "#define VERSION_DATE_STR \"$DATE\""
-            echo "#define VERSION_AUTHOR  \"$AUTHOR\""
+            echo ""
+            echo "static const char VERSION_STR[]      = \"v$VERSION\";"
+            echo "static const char VERSION_DATE_STR[] = \"$DATE\";"
+            echo "static const char VERSION_AUTHOR[]   = \"$AUTHOR\";"
+            echo ""
+            echo "#endif // VERSION_H"
           } > version.h
 
           cat version.h

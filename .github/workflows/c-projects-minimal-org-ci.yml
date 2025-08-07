@@ -69,6 +69,7 @@ jobs:
           cat version.h
 
   tag:
+    if: github.ref == 'refs/heads/main'
     needs: version
     runs-on: ubuntu-latest
     steps:

@@ -82,7 +82,7 @@ jobs:
           git remote -v
           
           # Create and push tag
-          fit fetch --tags
+          git fetch --tags
           git tag "$VERSION_TAG"
           git push origin "$VERSION_TAG"
 

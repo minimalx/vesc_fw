@@ -17,7 +17,7 @@
 #define GEAR_RATIO           11U
 #define MOTOR_TO_WHEEL_RATIO 55U
 
-#define TORQUE_TO_SPEED_UX      500.0F
+#define TORQUE_TO_CURRENT_UX    500.0F
 #define MAX_MOTOR_ERPM          17250U
 #define THRESHOLD_CONTROL_VALUE 1U
 
@@ -317,9 +317,9 @@ void              stop_motor(void);
 // FIR Filter for Control Value
 // ==============================
 
-#define CIXI_CONTROL_FILTER_MAX_SIZE 16U // Adjustable maximum buffer size
+#define CIXI_CONTROL_FILTER_MAX_SIZE 255U // Adjustable maximum buffer size
 #define CIXI_CONTROL_ZERO_SAMPLE_COUNT \
-    3U // Number of consecutive zero samples to reset
+    4U // Number of consecutive zero samples to reset
 
 /**
  * @brief Structure for parametric FIR filter for control values.

@@ -69,7 +69,7 @@ cixi_can_init (void)
 
     stop_now = false;
 
-    fir_filter_init(&control_filter, 10);
+    fir_filter_init(&control_filter, 16);
 
     // Spawn the CIXI CAN sending thread
     chThdCreateStatic(cixi_can_thread_wa,
@@ -325,14 +325,14 @@ handle_cixi_cmd (const CixiCanCommand *cmd)
                     = fir_filter_update(&control_filter, cmd->control_value);
                 if (filtered_value > 0)
                 {
-                    float req_speed = ((float)filtered_value * TORQUE_SCALE
-                                       * TORQUE_TO_SPEED_UX);
-                    if ((float)MAX_MOTOR_ERPM < req_speed)
-                    {
-                        req_speed = (float)MAX_MOTOR_ERPM;
-                    }
+                    float req_motor_torque
+                        = ((float)filtered_value * TORQUE_SCALE)
+                          / (float)GEAR_RATIO;
 
-                    mc_interface_set_pid_speed(req_speed);
+                    float req_current
+                        = 300.0F * req_motor_torque / MOTOR_TORQUE_CONSTANT;
+
+                    mc_interface_set_current(req_current);
                 }
                 else
                 {

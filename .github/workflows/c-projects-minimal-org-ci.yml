@@ -69,16 +69,30 @@ jobs:
           git tag "v$VERSION"
           git push origin "v$VERSION"
 
+  formatting-check:
+      name: Formatting Check
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
 
-  build:
-    name: Lint
-    runs-on: ubuntu-latest
+        - name: Get changed C/C++/Proto files in PR
+          id: changed-files
+          run: |
+            git fetch origin ${{ github.base_ref }}
+            FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '\.(c|cc|cpp|h|proto)$' || true)
+            echo "files=$FILES" >> $GITHUB_OUTPUT
 
-    steps:
-      - uses: actions/checkout@v2
-      - uses: RafikFarhad/clang-format-github-action@v3
-        with:
-          style: file
-          sources: '**/*.h,**/*.c'
+        - name: Show changed files
+          run: echo "${{ steps.changed-files.outputs.files }}"
+
+        - name: Run clang-format style check (only if files changed)
+          if: ${{ steps.changed-files.outputs.files != '' }}
+          uses: jidicula/clang-format-action@v4.15.0
+          with:
+            clang-format-version: '13'
+            check-path: ${{ steps.changed-files.outputs.files }}
+            fallback-style: 'LLVM'
 
           

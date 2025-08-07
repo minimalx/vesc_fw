@@ -77,8 +77,8 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git tag -a "${{ needs.version.outputs.version }}" -m "Release ${{ needs.version.outputs.version }}"
-          git push origin "${{ needs.version.outputs.version }}"
+          git tag -a "${{ needs.version.outputs.version_tag }}" -m "Release ${{ needs.version.outputs.version_tag }}"
+          git push origin "${{ needs.version.outputs.version_tag }}"
 
   formatting-check:
       name: Formatting Check

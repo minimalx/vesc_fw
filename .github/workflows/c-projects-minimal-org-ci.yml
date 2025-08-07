@@ -127,12 +127,12 @@ jobs:
             make fw_60_mk6_hp
 
         - name: List build outputs
-          run: ls -lh build/
+          run: ls -lh build/60_mk6_hp/
 
         - name: Upload .bin and .elf artifacts
           uses: actions/upload-artifact@v4
           with:
             name: firmware-artifacts
             path: |
-              build/*.bin
-              build/*.elf
+              build/60_mk6_hp/*.bin
+              build/60_mk6_hp/*.elf

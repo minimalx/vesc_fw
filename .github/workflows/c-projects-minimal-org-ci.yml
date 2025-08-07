@@ -68,13 +68,17 @@ jobs:
 
           cat version.h
 
-
-
-      # 🏷️ Tag and push only on merge to main
       - name: Create Git Tag on main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION_TAG: ${{ env.VERSION_TAG }}
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+
+          # Use token-based authentication
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+
           git tag "$VERSION_TAG"
           git push origin "$VERSION_TAG"
 

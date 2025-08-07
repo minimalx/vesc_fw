@@ -82,7 +82,12 @@ jobs:
           run: |
             git fetch origin ${{ github.base_ref }}
             FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '\.(c|cc|cpp|h|proto)$' || true)
-            echo "files=$FILES" >> $GITHUB_OUTPUT
+
+            # Convert to space-separated list
+            FILES=$(echo "$FILES" | tr '\n' ' ')
+            
+            # Safely write to output with proper quoting
+            printf "files=%s\n" "$FILES" >> $GITHUB_OUTPUT
 
         - name: Show changed files
           run: echo "${{ steps.changed-files.outputs.files }}"

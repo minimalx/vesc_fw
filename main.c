@@ -51,6 +51,7 @@
 #include "timeout.h"
 #include "timer.h"
 #include "utils_math.h"
+#include "version.h"
 
 #if HAS_BLACKMAGIC
 #include "bm_if.h"

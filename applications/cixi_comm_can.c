@@ -316,7 +316,7 @@ handle_cixi_cmd (const CixiCanCommand *cmd)
 
             if (cixi_controller_state == CIXI_STATE_ACTIVE)
             {
-                request_current_fsm(cmd->control_value);
+                control_fsm_step(cmd->control_value);
             }
             break;
     }

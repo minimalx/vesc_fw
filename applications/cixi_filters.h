@@ -23,17 +23,17 @@ typedef union
 /**
  * @brief Forward declaration of struct for function pointer compatibility.
  */
-typedef struct CIXIFIRFilter CIXIFIRFilter;
+typedef struct cixi_fir_filter_t cixi_fir_filter_t;
 
 /**
  * @brief Function pointer type for filter update functions.
  */
-typedef float (*CIXIFIRUpdateFunc)(CIXIFIRFilter *filter, void *new_value);
+typedef float (*CIXIFIRUpdateFunc)(cixi_fir_filter_t *filter, void *new_value);
 
 /**
  * @brief Structure for parametric FIR filter for control values.
  */
-struct CIXIFIRFilter
+struct cixi_fir_filter_t
 {
     CIXIFIRBuffer buffer;     ///< Union buffer for int16_t or float
     uint8_t       size;       ///< Number of samples in the filter (window size)
@@ -49,9 +49,9 @@ struct CIXIFIRFilter
  * @param size Window size (number of samples); must be ≤
  * CIXI_CONTROL_FILTER_MAX_SIZE.
  */
-void fir_filter_init(CIXIFIRFilter    *filter,
-                     uint8_t           size,
-                     CIXIFIRUpdateFunc updater);
+void fir_filter_init(cixi_fir_filter_t *filter,
+                     uint8_t            size,
+                     CIXIFIRUpdateFunc  updater);
 
 /**
  * @brief Update the filter with a new value and return the filtered result.
@@ -62,7 +62,7 @@ void fir_filter_init(CIXIFIRFilter    *filter,
  * @param new_value New incoming control value.
  * @return int16_t Filtered output value.
  */
-float fir_filter_update_float(CIXIFIRFilter *filter, void *new_value);
+float fir_filter_update_float(cixi_fir_filter_t *filter, void *new_value);
 
 /**
  * @brief Update the filter with a new value and return the filtered result.
@@ -74,13 +74,13 @@ float fir_filter_update_float(CIXIFIRFilter *filter, void *new_value);
  * @param new_value New incoming control value.
  * @return int16_t Filtered output value.
  */
-float fir_filter_update_int16(CIXIFIRFilter *filter, void *new_value);
+float fir_filter_update_int16(cixi_fir_filter_t *filter, void *new_value);
 
 /**
  * @brief Reset the FIR filter state.
  *
  * @param filter Pointer to the FIR filter structure.
  */
-void fir_filter_reset(CIXIFIRFilter *filter);
+void fir_filter_reset(cixi_fir_filter_t *filter);
 
 #endif // CIXI_FILTERS_H

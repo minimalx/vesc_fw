@@ -18,7 +18,9 @@
 // Initialize the FIR filter
 // ==============================
 void
-fir_filter_init (CIXIFIRFilter *filter, uint8_t size, CIXIFIRUpdateFunc updater)
+fir_filter_init (cixi_fir_filter_t *filter,
+                 uint8_t            size,
+                 CIXIFIRUpdateFunc  updater)
 {
     if (filter == NULL || updater == NULL || size == 0
         || size > CIXI_CONTROL_FILTER_MAX_SIZE)
@@ -37,7 +39,7 @@ fir_filter_init (CIXIFIRFilter *filter, uint8_t size, CIXIFIRUpdateFunc updater)
 // Reset the filter state
 // ==============================
 void
-fir_filter_reset (CIXIFIRFilter *filter)
+fir_filter_reset (cixi_fir_filter_t *filter)
 {
     if (filter == NULL)
     {
@@ -53,7 +55,7 @@ fir_filter_reset (CIXIFIRFilter *filter)
 // Update with float input
 // ==============================
 float
-fir_filter_update_float (CIXIFIRFilter *filter, void *new_value)
+fir_filter_update_float (cixi_fir_filter_t *filter, void *new_value)
 {
     if (filter == NULL || filter->size == 0)
     {
@@ -95,7 +97,7 @@ fir_filter_update_float (CIXIFIRFilter *filter, void *new_value)
 // Update with int16_t input
 // ==============================
 float
-fir_filter_update_int16 (CIXIFIRFilter *filter, void *new_value)
+fir_filter_update_int16 (cixi_fir_filter_t *filter, void *new_value)
 {
     if (filter == NULL || filter->size == 0)
     {

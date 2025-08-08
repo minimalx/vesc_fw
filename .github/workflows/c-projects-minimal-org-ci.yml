@@ -15,11 +15,20 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.c.outputs.version }}
-      version_tag: ${{ steps.c.outputs.version-tag }}
+      version_tag: ${{ steps.c.outputs.version_tag }}
     steps:
-      - name: Run C CI helpers
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0              # we need tags/history for semantic-version
+          submodules: recursive       # REQUIRED so the submodule is present
+
+          # If the submodule repo is private and not in the same org, you may need:
+          # token: ${{ secrets.GH_PAT_WITH_REPO_SCOPE }}
+
+      - name: Run C CI helpers (local composite)
         id: c
-        uses: ./workflow-templates/actions/c-actions
+        uses: ./workflow-templates/actions/c-actions   # <— local path to folder containing action.yml
         with:
           tag-prefix: "v"
 

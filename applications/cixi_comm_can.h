@@ -10,22 +10,6 @@
 #define SHIFT_6_BITS        6U
 #define MASK_CIXI_RECV_BASE 0x7F0
 
-#define TORQUE_SCALE         0.1F
-#define RPM_SCALE            0.1F
-#define EE_SIG_SCALE         0.01F
-#define POLE_PAIRS           5U
-#define GEAR_RATIO           11U
-#define MOTOR_TO_WHEEL_RATIO 55U
-
-#define TORQUE_TO_CURRENT_UX    500.0F
-#define MAX_MOTOR_ERPM          17250U
-#define THRESHOLD_CONTROL_VALUE 1U
-
-#define MOTOR_KV              10.0F
-#define MOTOR_TORQUE_CONSTANT 1.0F / MOTOR_KV
-#define BRAKE_CURRENT         5.0F
-#define STOP_CURRENT          0.0F
-
 #define CIXI_HEARTBEAT_TIMEOUT_MS               150U
 #define CIXI_HEARTBEAT_SEND_INTERVAL_MS         45U
 #define CIXI_STATUS_SEND_INTERVAL_MS            10U
@@ -311,54 +295,5 @@ CixiCanStatus     cixi_can_send_battery_status(const CixiBatteryStatus *status);
 CixiBatteryStatus cixi_get_battery_status(void);
 CixiCanCommand    parse_bms_cmd_frame(uint8_t *data8, int len);
 bool              handle_bms_cmd(const CixiCanCommand *cmd);
-void              stop_motor(void);
-
-// ==============================
-// FIR Filter for Control Value
-// ==============================
-
-#define CIXI_CONTROL_FILTER_MAX_SIZE 255U // Adjustable maximum buffer size
-#define CIXI_CONTROL_ZERO_SAMPLE_COUNT \
-    4U // Number of consecutive zero samples to reset
-
-/**
- * @brief Structure for parametric FIR filter for control values.
- */
-typedef struct
-{
-    int16_t buffer[CIXI_CONTROL_FILTER_MAX_SIZE]; ///< Circular buffer for
-                                                  ///< storing control values
-    uint8_t size;       ///< Number of samples in the filter (window size)
-    uint8_t index;      ///< Current index in the circular buffer
-    uint8_t zero_count; ///< Counter for consecutive zero or negative values
-} ControlValueFIRFilter;
-
-/**
- * @brief Initialize the FIR filter.
- *
- * @param filter Pointer to the FIR filter structure.
- * @param size Window size (number of samples); must be ≤
- * CIXI_CONTROL_FILTER_MAX_SIZE.
- */
-void fir_filter_init(ControlValueFIRFilter *filter, uint8_t size);
-
-/**
- * @brief Update the filter with a new value and return the filtered result.
- *
- * If 3 or more consecutive samples are zero or negative, the filter output
- * resets to zero.
- *
- * @param filter Pointer to the FIR filter structure.
- * @param new_value New incoming control value.
- * @return int16_t Filtered output value.
- */
-int16_t fir_filter_update(ControlValueFIRFilter *filter, int16_t new_value);
-
-/**
- * @brief Reset the FIR filter state.
- *
- * @param filter Pointer to the FIR filter structure.
- */
-void fir_filter_reset(ControlValueFIRFilter *filter);
 
 #endif // CAN_CIXI_COMMS_H

@@ -6,6 +6,8 @@ APPSRC =	applications/app.c \
 			applications/app_nunchuk.c \
 			applications/app_pas.c \
 			applications/app_custom.c \
-			applications/cixi_comm_can.c
+			applications/cixi_comm_can.c \
+			applications/cixi_filters.c \
+			applications/cixi_motor_control.c \
 
 APPINC = applications

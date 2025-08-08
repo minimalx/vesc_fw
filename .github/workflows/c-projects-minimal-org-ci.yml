@@ -1,163 +1,84 @@
 name: C Project CI/CD
 
+# Global anchors (YAML-level, not GH env for `uses:`)
+env:
+  SUBMODULE_DIR: &SUBMODULE_DIR workflow-templates
+  VERSION_ACTION: &VERSION_ACTION ./workflow-templates/actions/version-c
+  FORMATTING_ACTION: &FORMATTING_ACTION ./workflow-templates/actions/clang-format-check
+  BUILD_ACTION: &BUILD_ACTION ./workflow-templates/actions/build-vesc
+
 on:
   pull_request:
-    branches: [main]
+    branches: [ main]
   push:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   version:
+    name: Version & headers
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.expose.outputs.version }}
-      version_tag: ${{ steps.version.outputs.version_tag }}
+      version: ${{ steps.ver.outputs.version }}
+      version_tag: ${{ steps.ver.outputs.version_tag }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout (tags + submodules)
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Needed to access previous tags
+          fetch-depth: 0          # needed for semantic-version to see tags
+          submodules: recursive   # to pull your local actions submodules
 
-      - name: Calculate Version
-        id: version
-        uses: paulhatch/semantic-version@v5.4.0
+      - name: Version
+        id: ver
+        uses: *VERSION_ACTION
         with:
-          tag_prefix: "v"
-          major_pattern: "(MAJOR)"
-          minor_pattern: "(MINOR)"
-          enable_prerelease_mode: ${{ github.event_name == 'pull_request' }}
-          version_format: ${{ github.ref == 'refs/heads/main' && '${major}.${minor}.${patch}' || '${major}.${minor}.${patch}-dev${increment}' }}
+          tag-prefix: "v"
 
-      - name: Export Version to Environment
-        run: |
-          echo "VERSION=${{ steps.version.outputs.version }}"
-          echo "VERSION_TAG=${{ steps.version.outputs.version_tag }}"
-          echo "VERSION=${{ steps.version.outputs.version }}" >> $GITHUB_ENV
-          echo "VERSION_TAG=${{ steps.version.outputs.version_tag }}" >> $GITHUB_ENV
+  formatting:
+    name: Formatting Check
+    runs-on: ubuntu-latest
+    # Optional: run formatting in parallel to version. If you prefer to wait, add: needs: [version]
+    steps:
+      - name: Checkout (submodules)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
-      - name: Expose version as output
-        id: expose
-        run: |
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-
-      - name: Generate version.h (C version)
-        run: |
-          MAJOR=${VERSION%%.*}
-          REMAINDER=${VERSION#*.}
-          MINOR=${REMAINDER%%.*}
-          PATCH=${REMAINDER#*.}
-          PATCH=${PATCH%%-*}
-          DATE=$(date -u +"%Y-%m-%d")
-          AUTHOR="${{ github.actor }}"
-
-          {
-            echo "#ifndef VERSION_H"
-            echo "#define VERSION_H"
-            echo ""
-            echo "#define VERSION_MAJOR   $MAJOR"
-            echo "#define VERSION_MINOR   $MINOR"
-            echo "#define VERSION_PATCH   $PATCH"
-            echo ""
-            echo "static const char VERSION_STR[]      = \"v$VERSION\";"
-            echo "static const char VERSION_DATE_STR[] = \"$DATE\";"
-            echo "static const char VERSION_AUTHOR[]   = \"$AUTHOR\";"
-            echo ""
-            echo "#endif // VERSION_H"
-          } > version.h
-
-          cat version.h
+      - name: Run formatting
+        uses: *FORMATTING_ACTION
+        with:
+          # On push, base_ref is empty; default to main
+          base-ref: ${{ github.event_name == 'pull_request' && github.base_ref || 'main' }}
+          changed-exts: "c,cc,cpp,h,proto"
 
   tag:
     if: github.ref == 'refs/heads/main'
     needs:
-      - version
       - build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Create Tag
         run: |
           git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git tag -a "${{ needs.version.outputs.version_tag }}" -m "Release ${{ needs.version.outputs.version_tag }}"
-          git push origin "${{ needs.version.outputs.version_tag }}"
-
-  formatting-check:
-      name: Formatting Check
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-          with:
-            fetch-depth: 0
-
-        - name: Add LLVM apt repo
-          run: |
-            sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
-            sudo apt-get install -y clang-format-20
-
-        - name: Verify clang-format version
-          run: clang-format-20 --version
-
-        - name: Get changed C/C++/Proto files in PR
-          id: changed-files
-          run: |
-            git fetch origin ${{ github.base_ref }}
-            
-            # Get changed (but not deleted) files with specific extensions
-            FILES=$(git diff --diff-filter=d --name-only origin/${{ github.base_ref }}...HEAD | grep -E '\.(c|cc|cpp|h|proto)$' || true)
-
-            # Convert to space-separated list
-            FILES=$(echo "$FILES" | tr '\n' ' ')
-
-            # Safely write to GitHub output
-            printf "files=%s\n" "$FILES" >> $GITHUB_OUTPUT
-
-
-        - name: Show changed files
-          run: echo "${{ steps.changed-files.outputs.files }}"
-
-        - name: Run clang-format style check (manually)
-          if: ${{ steps.changed-files.outputs.files != '' }}
-          run: |
-            echo "Checking formatting for changed files..."
-            for file in ${{ steps.changed-files.outputs.files }}; do
-              echo "Checking: $file"
-              clang-format-20 --dry-run --Werror "$file"
-            done
+          git config --local user.name  "GitHub Action"
+          git tag -a "${{ needs.ver.outputs.version_tag }}" -m "Release ${{ needs.ver.outputs.version_tag }}"
+          git push origin "${{ needs.ver.outputs.version_tag }}"
 
   build:
-      name: Build and Upload Firmware
-      runs-on: ubuntu-latest
-      needs:
-        - version
-        - formatting-check
+    name: Build and Upload Firmware
+    runs-on: ubuntu-latest
+    needs:
+      - version
+      - formatting
+    steps:
+      - name: Checkout (tags + submodules)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # needed for semantic-version to see tags
+          submodules: recursive   # to pull your local actions submodules
 
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v3
-
-        - name: Build firmware
-          run: |
-            make arm_sdk_install
-            make fw_60_mk6_hp
-
-        - name: Rename .bin and .elf files to include version
-          run: |
-            VERSION=${{ needs.version.outputs.version }}
-            for file in build/60_mk6_hp/*.{bin,elf}; do
-              ext="${file##*.}"
-              base="$(basename "$file" .$ext)"
-              mv "$file" "build/60_mk6_hp/${base}_v${VERSION}.${ext}"
-            done
-
-        - name: List build outputs
-          run: ls -lh build/60_mk6_hp/
-
-        - name: Upload .bin and .elf artifacts
-          uses: actions/upload-artifact@v4
-          with:
-            name: firmware-artifacts
-            path: |
-              build/60_mk6_hp/*.bin
-              build/60_mk6_hp/*.elf
+      - name: Build VESC
+        uses: *BUILD_ACTION
+        with:
+          version: ${{ needs.version.outputs.version }}

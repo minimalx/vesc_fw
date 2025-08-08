@@ -309,13 +309,55 @@ bool handle_cixi_cmd(const CixiCanCommand *cmd);
 
 void cixi_can_init(void);
 
-void              app_custom_start(void);
-void              app_custom_stop(void);
-CixiCanStatus     cixi_can_send_bms_heartbeat(void);
-CixiCanStatus     cixi_can_send_battery_info(const CixiBatteryInfo *info);
-CixiCanStatus     cixi_can_send_battery_status(const CixiBatteryStatus *status);
+/**
+ * @brief Initialize and start custom application modules.
+ */
+void app_custom_start(void);
+
+/**
+ * @brief Stop custom modules and block until shutdown completes.
+ */
+void app_custom_stop(void);
+
+/**
+ * @brief Send a BMS heartbeat CAN frame.
+ * @return CIXI_CAN_OK on success, CIXI_CAN_ERROR on failure.
+ */
+CixiCanStatus cixi_can_send_bms_heartbeat(void);
+
+/**
+ * @brief Transmit battery info over CAN.
+ * @param info  Valid pointer to CixiBatteryInfo.
+ * @return CIXI_CAN_OK on success, CIXI_CAN_ERROR on NULL or failure.
+ */
+CixiCanStatus cixi_can_send_battery_info(const CixiBatteryInfo *info);
+
+/**
+ * @brief Transmit BMS status flags over CAN.
+ * @param status  Valid pointer to CixiBatteryStatus.
+ * @return CIXI_CAN_OK on success, CIXI_CAN_ERROR on NULL or failure.
+ */
+CixiCanStatus cixi_can_send_battery_status(const CixiBatteryStatus *status);
+
+/**
+ * @brief Get the current BMS status snapshot.
+ * @return Populated CixiBatteryStatus struct.
+ */
 CixiBatteryStatus cixi_get_battery_status(void);
-CixiCanCommand    parse_bms_cmd_frame(uint8_t *data8, int len);
-bool              handle_bms_cmd(const CixiCanCommand *cmd);
+
+/**
+ * @brief Parse a 1-byte BMS command CAN frame.
+ * @param data8  Pointer to data bytes.
+ * @param len    Must be 1.
+ * @return CixiCanCommand with .valid set accordingly.
+ */
+CixiCanCommand parse_bms_cmd_frame(uint8_t *data8, int len);
+
+/**
+ * @brief Update internal BMS state from a parsed command.
+ * @param cmd  Pointer to a parsed CixiCanCommand.
+ * @return true on valid state transition, false otherwise.
+ */
+bool handle_bms_cmd(const CixiCanCommand *cmd);
 
 #endif // CAN_CIXI_COMMS_H

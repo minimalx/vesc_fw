@@ -12,7 +12,7 @@
 #include "timeout.h"
 
 #define REGISTER_TASK(interval, fn) \
-    { .last_run = 0, .interval_ms = interval, .callback = fn }
+    { .last_run = 0U, .interval_ms = interval, .callback = fn }
 
 static int16_t             last_control_value = 0;
 static mutex_t             cixi_mtx;
@@ -704,13 +704,6 @@ static THD_FUNCTION(cixi_can_thread, arg)
 
     const size_t num_tasks = sizeof(tasks) / sizeof(*tasks);
 
-    // Initialize all last_run to “now”
-    systime_t start = chVTGetSystemTimeX();
-    for (size_t i = 0; i < num_tasks; i++)
-    {
-        tasks[i].last_run = start;
-    }
-
     for (;;)
     {
         if (stop_now)
@@ -734,4 +727,4 @@ static THD_FUNCTION(cixi_can_thread, arg)
         chThdSleepMilliseconds(5);
     }
 }
-#undef DEFINE_TASK
+#undef REGISTER_TASK

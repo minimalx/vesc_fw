@@ -1,9 +1,9 @@
 name: C Project CI/CD
 on:
   pull_request:
-    branches: [ $default-branch ]
+    branches: [ main ]
   push:
-    branches: [ $default-branch ]
+    branches: [ main ]
 
 jobs:
   version-format:

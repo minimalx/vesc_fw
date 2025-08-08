@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Run C CI helpers
         id: c
-        uses: minimal/.github/actions/c-actions@main
+        uses: .github/actions/c-actions@main
         with:
           tag-prefix: "v"
 

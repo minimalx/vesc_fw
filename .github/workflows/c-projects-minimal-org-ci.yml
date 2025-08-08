@@ -1,4 +1,9 @@
 name: C Project CI/CD
+
+permissions:
+  contents: read       # so you can check out code & composite actions
+  actions: read        # so you can fetch composite actions
+
 on:
   pull_request:
     branches: [ main ]

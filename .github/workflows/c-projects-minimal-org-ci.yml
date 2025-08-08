@@ -72,7 +72,12 @@ jobs:
       - version
       - formatting
     steps:
-      # No separate checkout needed — the composite does it.
+      - name: Checkout (tags + submodules)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # needed for semantic-version to see tags
+          submodules: recursive   # to pull your local actions submodules
+
       - name: Build VESC
         uses: *BUILD_ACTION
         with:

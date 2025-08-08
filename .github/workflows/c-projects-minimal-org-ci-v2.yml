@@ -1,0 +1,41 @@
+name: C Project CI/CD
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+
+jobs:
+  version-format:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.c.outputs.version }}
+      version_tag: ${{ steps.c.outputs.version-tag }}
+    steps:
+      - name: Run C CI helpers
+        id: c
+        uses: minimal/.github/actions/c-actions@main
+        with:
+          tag-prefix: "v"
+
+  tag:
+    if: github.ref == 'refs/heads/main'
+    needs: version-format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Create Tag
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name  "GitHub Action"
+          git tag -a "${{ needs.version-format.outputs.version_tag }}" -m "Release ${{ needs.version-format.outputs.version_tag }}"
+          git push origin "${{ needs.version-format.outputs.version_tag }}"
+
+  build:
+    needs: version-format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Firmware
+        run: |
+          echo "Building firmware version ${{ needs.version-format.outputs.version }}"

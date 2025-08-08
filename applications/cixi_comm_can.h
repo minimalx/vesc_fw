@@ -21,6 +21,28 @@
 #define APPCONF_SHUTDOWN_MODE SHUTDOWN_MODE_ALWAYS_ON
 
 /**
+ * @brief Function pointer type for periodic tasks.
+ *
+ * Represents a callback function that takes no parameters and returns no value.
+ * Such functions are invoked by the scheduler whenever their configured
+ * interval elapses.
+ */
+typedef void (*TaskFunc)(void);
+
+/**
+ * @brief Describes a single entry in the periodic task scheduler.
+ *
+ * Tracks when the task last ran, how often it should run, and the function to
+ * call.
+ */
+typedef struct
+{
+    systime_t last_run;    /* Timestamp of the last execution */
+    uint32_t  interval_ms; /* Desired interval between runs (ms). */
+    TaskFunc  callback; /* Function to invoke when the interval has elapsed. */
+} PeriodicTask;
+
+/**
  * @brief Enum for identifying base CAN IDs of known CIXI frames.
  */
 typedef enum

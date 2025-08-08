@@ -11,6 +11,9 @@
 #include "mc_interface.h"
 #include "timeout.h"
 
+#define REGISTER_TASK(interval, fn) \
+    { .last_run = 0, .interval_ms = interval, .callback = fn }
+
 static int16_t             last_control_value = 0;
 static mutex_t             cixi_mtx;
 static CixiCanHeartbeat    heartbeat_msg;
@@ -646,82 +649,89 @@ cixi_can_send_battery_status (const CixiBatteryStatus *status)
     return CIXI_CAN_OK;
 }
 
+// Period task functions
+static void
+task_check_heartbeat (void)
+{
+    check_heartbeat_timeout();
+}
+
+static void
+task_send_heartbeats (void)
+{
+    cixi_can_send_heartbeat(0);
+    cixi_can_send_bms_heartbeat();
+}
+
+static void
+task_send_status (void)
+{
+    if (cixi_controller_state != CIXI_STATE_INIT)
+    {
+        CixiCanData status = cixi_get_status_data(cixi_controller_state);
+        cixi_can_send_status(0, &status);
+    }
+}
+
+static void
+task_send_bms_info (void)
+{
+    CixiBatteryInfo info = cixi_get_battery_info();
+    cixi_can_send_battery_info(&info);
+}
+
+static void
+task_send_bms_status (void)
+{
+    CixiBatteryStatus status = cixi_get_battery_status();
+    cixi_can_send_battery_status(&status);
+}
+
 static THD_FUNCTION(cixi_can_thread, arg)
 {
     (void)arg;
-
     chRegSetThreadName("CIXI CAN process");
     is_running = true;
 
-    // Track last execution times
-    systime_t last_heartbeat_check = chVTGetSystemTimeX();
-    systime_t last_heartbeat_send  = last_heartbeat_check;
-    systime_t last_status_send     = last_heartbeat_check;
-    systime_t last_bms_info_send   = last_heartbeat_check;
-    systime_t last_bms_status_send = last_heartbeat_check;
+    PeriodicTask tasks[] = {
+        REGISTER_TASK(CIXI_HEARBEAT_TIMEOUT_CHECK_INTERVAL_MS,
+                      task_check_heartbeat),
+        REGISTER_TASK(CIXI_HEARTBEAT_SEND_INTERVAL_MS, task_send_heartbeats),
+        REGISTER_TASK(CIXI_STATUS_SEND_INTERVAL_MS, task_send_status),
+        REGISTER_TASK(CIXI_BMS_INFO_SEND_INTERVAL_MS, task_send_bms_info),
+        REGISTER_TASK(CIXI_BMS_STATUS_SEND_INTERVAL_MS, task_send_bms_status),
+    };
 
-    // init comms and put pers and controller into active modes
-    // for now just listen to commands for testing
+    const size_t num_tasks = sizeof(tasks) / sizeof(*tasks);
+
+    // Initialize all last_run to “now”
+    systime_t start = chVTGetSystemTimeX();
+    for (size_t i = 0; i < num_tasks; i++)
+    {
+        tasks[i].last_run = start;
+    }
 
     for (;;)
     {
-        // Check if it is time to stop.
         if (stop_now)
         {
             is_running = false;
             return;
         }
 
-        systime_t now = chVTGetSystemTimeX();
-
-        // Every 5 ms: check heartbeat timeout
-        if (ST2MS(chVTTimeElapsedSinceX(last_heartbeat_check))
-            >= CIXI_HEARBEAT_TIMEOUT_CHECK_INTERVAL_MS)
+        systime_t elapsed_ms = 0U;
+        for (size_t i = 0; i < num_tasks; i++)
         {
-            check_heartbeat_timeout();
-            last_heartbeat_check = now;
-        }
-
-        // Every 35 ms: send heartbeat
-        if (ST2MS(chVTTimeElapsedSinceX(last_heartbeat_send))
-            >= CIXI_HEARTBEAT_SEND_INTERVAL_MS)
-        {
-            cixi_can_send_heartbeat(0);
-            cixi_can_send_bms_heartbeat();
-            last_heartbeat_send = now;
-        }
-
-        // Every 10 ms: get & send status
-        if (ST2MS(chVTTimeElapsedSinceX(last_status_send))
-            >= CIXI_STATUS_SEND_INTERVAL_MS)
-        {
-            if (cixi_controller_state != CIXI_STATE_INIT)
+            elapsed_ms = ST2MS(chVTTimeElapsedSinceX(tasks[i].last_run));
+            if (elapsed_ms >= tasks[i].interval_ms)
             {
-                CixiCanData status
-                    = cixi_get_status_data(cixi_controller_state);
-                cixi_can_send_status(0, &status);
+                tasks[i].callback();
+                tasks[i].last_run = chVTGetSystemTimeX();
             }
-            last_status_send = now;
         }
 
-        // Every 75 ms: get & send BMS info
-        if (ST2MS(chVTTimeElapsedSinceX(last_bms_info_send))
-            >= CIXI_BMS_INFO_SEND_INTERVAL_MS)
-        {
-            CixiBatteryInfo info = cixi_get_battery_info();
-            cixi_can_send_battery_info(&info);
-            last_bms_info_send = now;
-        }
-
-        // Every 35 ms: send BMS status
-        if (ST2MS(chVTTimeElapsedSinceX(last_bms_status_send))
-            >= CIXI_BMS_STATUS_SEND_INTERVAL_MS)
-        {
-            CixiBatteryStatus status = cixi_get_battery_status();
-            cixi_can_send_battery_status(&status);
-            last_bms_status_send = now;
-        }
-
+        // sleep shortest reasonable tick
         chThdSleepMilliseconds(5);
     }
 }
+#undef DEFINE_TASK

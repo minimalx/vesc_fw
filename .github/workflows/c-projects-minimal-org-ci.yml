@@ -1,8 +1,10 @@
 name: C Project CI/CD
 
-permissions:
-  contents: read       # so you can check out code & composite actions
-  actions: read        # so you can fetch composite actions
+# Global anchors (YAML-level, not GH env for `uses:`)
+env:
+  SUBMODULE_DIR: &SUBMODULE_DIR workflow-templates
+  VERSION_ACTION: &VERSION_ACTION ./workflow-templates/actions/version
+  FORMATTING_ACTION: &FORMATTING_ACTION ./workflow-templates/actions/formatting
 
 on:
   pull_request:
@@ -11,30 +13,48 @@ on:
     branches: [ main ]
 
 jobs:
-  version-format:
+  version:
+    name: Version & headers
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.c.outputs.version }}
-      version_tag: ${{ steps.c.outputs.version_tag }}
+      version: ${{ steps.ver.outputs.version }}
+      version_tag: ${{ steps.ver.outputs.version_tag }}
     steps:
-      - name: Checkout (with submodules)
+      - name: Checkout (tags + submodules)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0              # we need tags/history for semantic-version
-          submodules: recursive       # REQUIRED so the submodule is present
+          fetch-depth: 0          # needed for semantic-version to see tags
+          submodules: recursive   # to pull your local actions submodules
 
-          # If the submodule repo is private and not in the same org, you may need:
-          # token: ${{ secrets.GH_PAT_WITH_REPO_SCOPE }}
-
-      - name: Run C CI helpers (local composite)
-        id: c
-        uses: ./workflow-templates/actions/version-and-clang   # <— local path to folder containing action.yml
+      - name: Version
+        id: ver
+        uses: *VERSION_ACTION
         with:
           tag-prefix: "v"
 
+  formatting:
+    name: Formatting Check
+    runs-on: ubuntu-latest
+    # Optional: run formatting in parallel to version. If you prefer to wait, add: needs: [version]
+    steps:
+      - name: Checkout (submodules)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Run formatting
+        uses: *FORMATTING_ACTION
+        with:
+          # On push, base_ref is empty; default to main
+          base-ref: ${{ github.event_name == 'pull_request' && github.base_ref || 'main' }}
+          changed-exts: "c,cc,cpp,h,proto"
+
+
   tag:
     if: github.ref == 'refs/heads/main'
-    needs: version-format
+    needs:
+      - build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -42,14 +62,16 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name  "GitHub Action"
-          git tag -a "${{ needs.version-format.outputs.version_tag }}" -m "Release ${{ needs.version-format.outputs.version_tag }}"
-          git push origin "${{ needs.version-format.outputs.version_tag }}"
+          git tag -a "${{ needs.ver.outputs.version_tag }}" -m "Release ${{ needs.ver.outputs.version_tag }}"
+          git push origin "${{ needs.ver.outputs.version_tag }}"
 
   build:
-    needs: version-format
+    needs:
+      - version
+      - formatting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Build Firmware
         run: |
-          echo "Building firmware version ${{ needs.version-format.outputs.version }}"
+          echo "Building firmware version ${{ needs.ver.outputs.version }}"

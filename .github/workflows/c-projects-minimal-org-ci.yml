@@ -28,7 +28,7 @@ jobs:
 
       - name: Run C CI helpers (local composite)
         id: c
-        uses: ./workflow-templates/actions/c-actions   # <— local path to folder containing action.yml
+        uses: ./workflow-templates/actions/version-and-clang   # <— local path to folder containing action.yml
         with:
           tag-prefix: "v"
 

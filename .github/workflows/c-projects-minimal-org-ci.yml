@@ -5,7 +5,7 @@ env:
   SUBMODULE_DIR: &SUBMODULE_DIR workflow-templates
   VERSION_ACTION: &VERSION_ACTION ./workflow-templates/actions/version-c
   FORMATTING_ACTION: &FORMATTING_ACTION ./workflow-templates/actions/clang-format-check
-  BUILD_ACTION: &BUILD_ACTION ./workflow-templates/actions/build_vesc
+  BUILD_ACTION: &BUILD_ACTION ./workflow-templates/actions/build-vesc
 
 on:
   pull_request:

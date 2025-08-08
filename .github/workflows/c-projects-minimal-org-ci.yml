@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Run C CI helpers
         id: c
-        uses: .github/actions/c-actions@main
+        uses: ./workflow-templates/actions/c-actions
         with:
           tag-prefix: "v"
 
